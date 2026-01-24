@@ -255,6 +255,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - Neon Serverless PostgreSQL database with SQLModel ORM (002-backend-api-database)
 - TypeScript 5.0+, JavaScript ES2022 + Next.js 16+, React 18+, Tailwind CSS 4.0+, Framer Motion 11+ (004-home-page-ui)
 - LocalStorage for theme preference persistence, CSS variables for theme state (004-home-page-ui)
+- Python 3.11, JavaScript/TypeScript, Next.js 16+ + FastAPI, Better Auth, JWT, SQLModel, Neon PostgreSQL, Pydantic (005-auth-jwt-specification)
+- Neon Serverless PostgreSQL with SQLModel ORM (005-auth-jwt-specification)
 
 ## Recent Changes
 - 001-auth-identity: Added Python 3.11, JavaScript/TypeScript, Next.js 16+ + Better Auth (frontend), FastAPI (backend), SQLModel (ORM), Neon Serverless PostgreSQL (database)
