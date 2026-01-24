@@ -4,6 +4,7 @@ from .api.auth import router as auth_router
 from .api.tasks import router as tasks_router
 from .api.chat import router as chat_router
 from .api.mcp_tools import router as mcp_tools_router
+from .api.conversations import router as conversations_router
 from .config.settings import settings
 import os
 from dotenv import load_dotenv
@@ -38,6 +39,9 @@ app.include_router(chat_router, prefix="/api")
 
 # Include MCP tools routes (will be protected by authentication)
 app.include_router(mcp_tools_router, prefix="/api")
+
+# Include conversations routes (will be protected by authentication)
+app.include_router(conversations_router, prefix="/api")
 
 @app.get("/")
 async def root():

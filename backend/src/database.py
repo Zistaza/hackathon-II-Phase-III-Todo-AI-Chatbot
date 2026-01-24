@@ -20,6 +20,9 @@ def init_db():
     """
     from .models.user_model import User  # Import models to register them
     from .models.task_model import Task  # Import Task model to register it
+    from .models.conversation_model import Conversation  # Import new model
+    from .models.message_model import Message  # Import new model
+    from .models.mcp_tool import MCPToolMetadata  # Import existing model
     from sqlmodel import SQLModel
 
     # Create all tables
