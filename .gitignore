@@ -113,4 +113,15 @@ pids/
 
 # Temporary folders
 temp/
-tmp/
+tmp/.venv/
+
+# Backend virtual env
+backend/venv/
+backend/.venv/
+
+# Frontend node_modules
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+frontend/.turbo/
+frontend/*.log

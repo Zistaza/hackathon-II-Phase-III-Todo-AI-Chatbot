@@ -1,12 +1,13 @@
 <!-- SYNC IMPACT REPORT:
-Version change: N/A -> 1.0.0
-Added sections: Spec-Driven Development, Separation of Concerns, Security by Default, Multi-Tenant Isolation, Deterministic APIs, Cloud-Native Design principles
-Removed sections: None (completely new constitution)
+Version change: 1.0.0 -> 2.0.0
+Modified principles: Phase II – Todo Full-Stack Web Application → Phase III – Todo AI Chatbot (Agentic MCP Architecture)
+Added sections: Agentic-first design, Statelessness, Tool-based interaction, MCP Tooling Standards, Agent Behavior Standards, OpenAI Agents SDK, MCP Server requirements
+Removed sections: Previous API contract (replaced with new chat-based approach)
 Templates requiring updates: ⚠ pending - .specify/templates/plan-template.md, .specify/templates/spec-template.md, .specify/templates/tasks-template.md
-Follow-up TODOs: RATIFICATION_DATE needs to be set when constitution is formally adopted
+Follow-up TODOs: None
 -->
 
-# Phase II – Todo Full-Stack Web Application Constitution
+# Phase III – Todo AI Chatbot (Agentic MCP Architecture) Constitution
 
 ## Core Principles
 
@@ -14,7 +15,7 @@ Follow-up TODOs: RATIFICATION_DATE needs to be set when constitution is formally
 All implementation must originate from written specifications; every feature starts with a clear spec document that defines requirements, acceptance criteria, and test cases before any code is written
 
 ### Separation of Concerns
-Frontend, Backend, Database, and Authentication responsibilities are isolated; each layer has clear boundaries and interfaces without cross-contamination of concerns
+UI, agent logic, MCP tooling, and persistence responsibilities are isolated; each layer has clear boundaries and interfaces without cross-contamination of concerns
 
 ### Security by Default (NON-NEGOTIABLE)
 Every request is authenticated and authorized via JWT; backend must reject unauthenticated requests with HTTP 401; all database queries must be filtered by authenticated user ID
@@ -22,46 +23,68 @@ Every request is authenticated and authorized via JWT; backend must reject unaut
 ### Multi-Tenant Isolation
 Users can only access and modify their own data; user ID in the URL must match the user ID in the JWT; cross-user data access is strictly forbidden
 
+### Agentic-first Design
+AI agent reasoning drives all task operations; the system must be designed around the OpenAI Agents SDK and its decision-making capabilities; all user interactions flow through the AI agent
+
+### Statelessness
+No server-side memory between requests; all state must be persisted in the database; the backend must be horizontally scalable and restart-safe with full conversation context reconstruction from database
+
+### Tool-based Interaction
+AI must interact with the application exclusively via MCP (Model Context Protocol) tools; no direct API calls from agents; all operations must occur through the defined MCP tool interface
+
 ### Deterministic APIs
-Backend behavior must be predictable, validated, and testable; RESTful API endpoints must follow the defined contract with appropriate HTTP status codes
+Backend behavior must be predictable, validated, and testable; the single chat endpoint must follow the defined contract with appropriate response handling
 
 ### Cloud-Native Design
 Stateless backend, serverless-friendly database usage; minimal viable implementations avoiding premature optimization
 
 ## Technology Standards
-Frontend: Next.js 16+ using App Router; Backend: Python FastAPI; ORM: SQLModel; Database: Neon Serverless PostgreSQL; Authentication: Better Auth with JWT; Environment secrets must be managed via environment variables; Shared JWT secret must be configured via BETTER_AUTH_SECRET
+
+Frontend: OpenAI ChatKit; Backend: Python FastAPI; AI Framework: OpenAI Agents SDK; MCP Server: Official MCP SDK only; ORM: SQLModel; Database: Neon Serverless PostgreSQL; Authentication: Better Auth with JWT; Environment secrets must be managed via environment variables; Shared JWT secret must be configured via BETTER_AUTH_SECRET
 
 ## Development Workflow
-All features must be implemented according to written specs; Frontend is responsive and usable on desktop and mobile; The system is explainable, auditable, and demo-ready for judging
+
+All features must be implemented according to written specs; The system must support conversation resumption after server restarts; The chatbot must fully manage todos through natural language; All task operations performed exclusively through MCP tools
 
 ## Governance
 
-All implementation must follow the defined API contracts (GET/POST/PUT/DELETE/PATCH endpoints with proper JWT authentication).
+All implementation must follow the defined API contracts and MCP tool schemas.
 
 ### REST API Contract (LOCKED)
 
 All implementations must conform to the following REST API contract:
-- GET /api/{user_id}/tasks — List all tasks for authenticated user
-- POST /api/{user_id}/tasks — Create a new task
-- GET /api/{user_id}/tasks/{id} — Get task details
-- PUT /api/{user_id}/tasks/{id} — Update a task
-- DELETE /api/{user_id}/tasks/{id} — Delete a task
-- PATCH /api/{user_id}/tasks/{id}/complete — Toggle completion
+- POST /api/{user_id}/chat — Single chat endpoint handles all AI interactions
 
 No endpoint renaming, path restructuring, or contract deviation is allowed without a constitution amendment.
 
-No hardcoded secrets or credentials in code; Backend must remain stateless; No direct database access from frontend.
+### MCP Tooling Standards (LOCKED)
+
+All implementations must conform to the following MCP tools contract:
+- add_task — Creates a new task in the database
+- list_tasks — Lists all tasks for the authenticated user
+- complete_task — Marks a task as completed
+- delete_task — Deletes a task from the database
+- update_task — Updates task properties
+
+No tool renaming, schema modification, or contract deviation is allowed without a constitution amendment.
+
+No hardcoded secrets or credentials in code; Backend must remain stateless; No direct database access from frontend; MCP tools must not contain conversational logic.
 
 ## Success Criteria
+
 - All API endpoints require valid JWT authentication
 - Users can only access and modify their own tasks
 - Tasks persist reliably in Neon PostgreSQL
-- Frontend, backend, and database operate independently
+- Conversation history is replayable after server restart
+- MCP tools validate user ownership and handle errors gracefully
+- Agent demonstrates correct tool usage and confirmations
+- Chatbot fully manages todos through natural language
 - Application is demo-ready and judge-verifiable
 
 ## Authority Hierarchy
+
 Constitution > Specifications > Plans > Tasks > Code
+
 Any conflict must be resolved in favor of the higher authority document.
 
-
-**Version**: 1.0.0 | **Ratified**: TODO(RATIFICATION_DATE): Original adoption date unknown | **Last Amended**: 2026-01-15
+**Version**: 2.0.0 | **Ratified**: 2026-01-24 | **Last Amended**: 2026-01-24
