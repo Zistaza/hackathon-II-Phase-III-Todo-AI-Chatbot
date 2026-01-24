@@ -1,0 +1,561 @@
+openapi: 3.0.3
+info:
+  title: Todo AI Chatbot - Conversation API
+  description: API for managing conversations and messages in the Todo AI Chatbot application
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.todo-ai-chatbot.com
+    description: Production server
+paths:
+  /conversations/:
+    get:
+      summary: Get user's conversations
+      description: Retrieve all conversations for the authenticated user
+      tags:
+        - conversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Maximum number of conversations to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+          description: Number of conversations to skip
+      responses:
+        '200':
+          description: List of user's conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConversationPublic'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+    post:
+      summary: Create a new conversation
+      description: Create a new conversation for the authenticated user
+      tags:
+        - conversations
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationCreate'
+      responses:
+        '200':
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationPublic'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /conversations/{conversation_id}:
+    get:
+      summary: Get a specific conversation
+      description: Retrieve a specific conversation for the authenticated user
+      tags:
+        - conversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the conversation to retrieve
+      responses:
+        '200':
+          description: Conversation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversationPublic'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      summary: Delete a conversation
+      description: Delete a specific conversation for the authenticated user
+      tags:
+        - conversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the conversation to delete
+      responses:
+        '200':
+          description: Deletion confirmation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Conversation deleted successfully"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+  /conversations/{conversation_id}/messages:
+    get:
+      summary: Get messages from a conversation
+      description: Retrieve messages from a specific conversation for the authenticated user
+      tags:
+        - conversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the conversation to retrieve messages from
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+          description: Maximum number of messages to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+          description: Number of messages to skip
+      responses:
+        '200':
+          description: List of messages in the conversation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessagePublic'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    post:
+      summary: Add a message to a conversation
+      description: Add a new message to a specific conversation
+      tags:
+        - conversations
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: conversation_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the conversation to add message to
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageCreate'
+      responses:
+        '200':
+          description: Created message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessagePublic'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /chat/{user_id}:
+    post:
+      summary: Send a chat message
+      description: Send a chat message and receive an AI response
+      tags:
+        - chat
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user sending the message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatMessage'
+      responses:
+        '200':
+          description: AI response to the user's message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /chat/{user_id}/history:
+    get:
+      summary: Get chat history
+      description: Retrieve chat history for the specified user
+      tags:
+        - chat
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the user whose chat history to retrieve
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+          description: Maximum number of messages to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+          description: Number of messages to skip
+      responses:
+        '200':
+          description: Chat history for the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatHistoryResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ConversationBase:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          description: Conversation title
+        metadata:
+          type: object
+          description: Additional conversation metadata
+          nullable: true
+      required:
+        - title
+    Conversation:
+      allOf:
+        - $ref: '#/components/schemas/ConversationBase'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique conversation identifier
+            user_id:
+              type: string
+              description: ID of the user who owns this conversation
+            created_at:
+              type: string
+              format: date-time
+              description: Conversation creation timestamp
+            updated_at:
+              type: string
+              format: date-time
+              description: Last conversation update timestamp
+          required:
+            - id
+            - user_id
+            - created_at
+            - updated_at
+    ConversationCreate:
+      allOf:
+        - $ref: '#/components/schemas/ConversationBase'
+      description: Schema for creating a new conversation
+    ConversationUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          description: Conversation title
+        metadata:
+          type: object
+          description: Additional conversation metadata
+          nullable: true
+      description: Schema for updating a conversation
+    ConversationPublic:
+      allOf:
+        - $ref: '#/components/schemas/ConversationBase'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique conversation identifier
+            user_id:
+              type: string
+              description: ID of the user who owns this conversation
+            created_at:
+              type: string
+              format: date-time
+              description: Conversation creation timestamp
+            updated_at:
+              type: string
+              format: date-time
+              description: Last conversation update timestamp
+          required:
+            - id
+            - user_id
+            - created_at
+            - updated_at
+    MessageBase:
+      type: object
+      properties:
+        conversation_id:
+          type: string
+          description: ID of the conversation this message belongs to
+        user_id:
+          type: string
+          description: ID of the user who sent this message
+        role:
+          type: string
+          enum: [user, assistant, system]
+          description: Role of the message sender
+        content:
+          type: string
+          description: Message content
+        metadata:
+          type: object
+          description: Additional message metadata
+          nullable: true
+      required:
+        - conversation_id
+        - user_id
+        - role
+        - content
+    Message:
+      allOf:
+        - $ref: '#/components/schemas/MessageBase'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique message identifier
+            timestamp:
+              type: string
+              format: date-time
+              description: When the message was sent
+          required:
+            - id
+            - timestamp
+    MessageCreate:
+      allOf:
+        - $ref: '#/components/schemas/MessageBase'
+      description: Schema for creating a new message
+    MessageUpdate:
+      type: object
+      properties:
+        content:
+          type: string
+          description: Updated message content
+        metadata:
+          type: object
+          description: Additional message metadata
+          nullable: true
+      description: Schema for updating a message
+    MessagePublic:
+      allOf:
+        - $ref: '#/components/schemas/MessageBase'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Unique message identifier
+            timestamp:
+              type: string
+              format: date-time
+              description: When the message was sent
+          required:
+            - id
+            - timestamp
+    ChatMessage:
+      type: object
+      properties:
+        content:
+          type: string
+          description: The content of the message
+        role:
+          type: string
+          enum: [user, assistant, system]
+          default: user
+          description: The role of the message sender
+        timestamp:
+          type: string
+          format: date-time
+          description: When the message was created
+      required:
+        - content
+    ChatResponse:
+      type: object
+      properties:
+        response:
+          type: string
+          description: The content of the response from the AI assistant
+        message_id:
+          type: string
+          description: Unique identifier for the response message
+        timestamp:
+          type: string
+          format: date-time
+          description: When the response was generated
+        conversation_id:
+          type: string
+          description: ID of the conversation this message belongs to
+      required:
+        - response
+        - message_id
+        - timestamp
+        - conversation_id
+    ChatHistoryRequest:
+      type: object
+      properties:
+        limit:
+          type: integer
+          default: 10
+          description: Maximum number of messages to return
+        offset:
+          type: integer
+          default: 0
+          description: Number of messages to skip
+    ChatHistoryResponse:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+          description: List of chat messages in the conversation
+        total_count:
+          type: integer
+          description: Total number of messages in the conversation
+        has_more:
+          type: boolean
+          description: Whether there are more messages available
+      required:
+        - messages
+        - total_count
+        - has_more
+  responses:
+    UnauthorizedError:
+      description: Unauthorized - Invalid or missing JWT token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: "Not authenticated"
+    ForbiddenError:
+      description: Forbidden - User does not have permission to access this resource
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: "Access denied: Cannot access resource for user X. You are authenticated as user Y"
+    NotFoundError:
+      description: Not Found - The requested resource does not exist
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: "Resource X not found"
+    ValidationError:
+      description: Validation Error - Request body contains invalid data
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    loc:
+                      type: array
+                      items:
+                        type: string
+                    msg:
+                      type: string
+                    type:
+                      type: string

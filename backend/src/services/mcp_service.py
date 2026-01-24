@@ -9,6 +9,9 @@ from ..models.mcp_tool import (
     MCPToolAccessLog, MCPToolAccessType, MCPToolType
 )
 from ..models.user import CurrentUser
+from ..models.task_model import Task, TaskCreate, TaskUpdate
+from ..models.conversation_model import Conversation
+from ..models.message_model import Message
 from ..database import get_session
 from ..utils.mcp_auth import validate_mcp_tool_access, get_current_user_from_token
 
@@ -100,6 +103,36 @@ class MCPTOOL_SERVICE:
             return await self._handle_data_analysis(tool_request)
         elif "file_manager" in tool_type.lower():
             return await self._handle_file_management(tool_request)
+        elif "task" in tool_type.lower():
+            # Handle task-related operations
+            if tool_request.action == "add_task":
+                return await self._handle_add_task(tool_request)
+            elif tool_request.action == "list_tasks":
+                return await self._handle_list_tasks(tool_request)
+            elif tool_request.action == "update_task":
+                return await self._handle_update_task(tool_request)
+            elif tool_request.action == "complete_task":
+                return await self._handle_complete_task(tool_request)
+            elif tool_request.action == "delete_task":
+                return await self._handle_delete_task(tool_request)
+            else:
+                return await self._handle_task_operation(tool_request)
+        elif "conversation" in tool_type.lower():
+            # Handle conversation-related operations
+            if tool_request.action == "create_conversation":
+                return await self._handle_create_conversation(tool_request)
+            elif tool_request.action == "get_conversations":
+                return await self._handle_get_conversations(tool_request)
+            elif tool_request.action == "get_conversation":
+                return await self._handle_get_conversation(tool_request)
+            elif tool_request.action == "add_message":
+                return await self._handle_add_message(tool_request)
+            elif tool_request.action == "get_messages":
+                return await self._handle_get_messages(tool_request)
+            elif tool_request.action == "delete_conversation":
+                return await self._handle_delete_conversation(tool_request)
+            else:
+                return await self._handle_conversation_operation(tool_request)
         else:
             # Default handler for unknown tool types
             await asyncio.sleep(0.1)  # Simulate processing time
@@ -143,6 +176,377 @@ class MCPTOOL_SERVICE:
             "files_processed": [r.resource_id for r in tool_request.resources],
             "result": "Operation completed successfully",
             "status": "success"
+        }
+
+    async def _handle_add_task(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle add_task operation with user_id filtering
+        """
+        user_id = tool_request.user_id
+
+        # Extract task parameters from the request
+        title = tool_request.parameters.get('title', 'Untitled Task')
+        description = tool_request.parameters.get('description', '')
+
+        # Create a new task for the user
+        new_task = Task(
+            title=title,
+            description=description,
+            completed=False,
+            user_id=user_id
+        )
+
+        self.session.add(new_task)
+        self.session.commit()
+        self.session.refresh(new_task)
+
+        return {
+            "task_id": new_task.id,
+            "title": new_task.title,
+            "description": new_task.description,
+            "status": "created",
+            "user_id": user_id
+        }
+
+    async def _handle_list_tasks(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle list_tasks operation with user_id filtering
+        """
+        user_id = tool_request.user_id
+
+        # Query tasks for the specific user only
+        statement = select(Task).where(Task.user_id == user_id)
+        tasks = self.session.exec(statement).all()
+
+        task_list = []
+        for task in tasks:
+            task_list.append({
+                "id": task.id,
+                "title": task.title,
+                "description": task.description,
+                "completed": task.completed,
+                "created_at": task.created_at.isoformat() if task.created_at else None,
+                "updated_at": task.updated_at.isoformat() if task.updated_at else None
+            })
+
+        return {
+            "tasks": task_list,
+            "total_count": len(task_list),
+            "user_id": user_id
+        }
+
+    async def _handle_update_task(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle update_task operation with user_id filtering
+        """
+        user_id = tool_request.user_id
+        task_id = tool_request.parameters.get('task_id')
+
+        # Find the task that belongs to the user
+        statement = select(Task).where(
+            Task.id == task_id,
+            Task.user_id == user_id
+        )
+        task = self.session.exec(statement).first()
+
+        if not task:
+            return {
+                "error": f"Task {task_id} not found or not owned by user {user_id}",
+                "status": "failed"
+            }
+
+        # Update task with provided parameters
+        if 'title' in tool_request.parameters:
+            task.title = tool_request.parameters['title']
+        if 'description' in tool_request.parameters:
+            task.description = tool_request.parameters['description']
+        if 'completed' in tool_request.parameters:
+            task.completed = tool_request.parameters['completed']
+
+        task.updated_at = datetime.utcnow()
+
+        self.session.add(task)
+        self.session.commit()
+        self.session.refresh(task)
+
+        return {
+            "task_id": task.id,
+            "title": task.title,
+            "description": task.description,
+            "completed": task.completed,
+            "status": "updated",
+            "user_id": user_id
+        }
+
+    async def _handle_complete_task(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle complete_task operation with user_id filtering
+        """
+        user_id = tool_request.user_id
+        task_id = tool_request.parameters.get('task_id')
+
+        # Find the task that belongs to the user
+        statement = select(Task).where(
+            Task.id == task_id,
+            Task.user_id == user_id
+        )
+        task = self.session.exec(statement).first()
+
+        if not task:
+            return {
+                "error": f"Task {task_id} not found or not owned by user {user_id}",
+                "status": "failed"
+            }
+
+        # Complete the task
+        task.completed = True
+        task.updated_at = datetime.utcnow()
+
+        self.session.add(task)
+        self.session.commit()
+        self.session.refresh(task)
+
+        return {
+            "task_id": task.id,
+            "completed": task.completed,
+            "status": "completed",
+            "user_id": user_id
+        }
+
+    async def _handle_delete_task(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle delete_task operation with user_id filtering
+        """
+        user_id = tool_request.user_id
+        task_id = tool_request.parameters.get('task_id')
+
+        # Find the task that belongs to the user
+        statement = select(Task).where(
+            Task.id == task_id,
+            Task.user_id == user_id
+        )
+        task = self.session.exec(statement).first()
+
+        if not task:
+            return {
+                "error": f"Task {task_id} not found or not owned by user {user_id}",
+                "status": "failed"
+            }
+
+        # Delete the task
+        self.session.delete(task)
+        self.session.commit()
+
+        return {
+            "task_id": task_id,
+            "status": "deleted",
+            "user_id": user_id
+        }
+
+    async def _handle_task_operation(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle generic task operations
+        """
+        await asyncio.sleep(0.1)  # Simulate processing time
+        return {
+            "operation": tool_request.action,
+            "user_id": tool_request.user_id,
+            "parameters_used": tool_request.parameters,
+            "status": "completed"
+        }
+
+    async def _handle_create_conversation(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle create_conversation operation with user_id filtering
+        """
+        user_id = tool_request.user_id
+
+        # Extract conversation parameters from the request
+        title = tool_request.parameters.get('title', 'Untitled Conversation')
+        metadata = tool_request.parameters.get('metadata', {})
+
+        # Create a new conversation for the user
+        conversation_data = ConversationCreate(
+            title=title,
+            metadata=metadata
+        )
+
+        conversation_service = ConversationService(self.session)
+        conversation = conversation_service.create_conversation(
+            user_id=user_id,
+            conversation_data=conversation_data
+        )
+
+        return {
+            "conversation_id": conversation.id,
+            "title": conversation.title,
+            "status": "created",
+            "user_id": user_id
+        }
+
+    async def _handle_get_conversations(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle get_conversations operation with user_id filtering
+        """
+        user_id = tool_request.user_id
+        limit = tool_request.parameters.get('limit', 10)
+        offset = tool_request.parameters.get('offset', 0)
+
+        conversation_service = ConversationService(self.session)
+        conversations = conversation_service.get_user_conversations(
+            user_id=user_id,
+            limit=limit,
+            offset=offset
+        )
+
+        conversation_list = []
+        for conv in conversations:
+            conversation_list.append({
+                "id": conv.id,
+                "title": conv.title,
+                "created_at": conv.created_at.isoformat() if conv.created_at else None,
+                "updated_at": conv.updated_at.isoformat() if conv.updated_at else None,
+                "metadata": conv.metadata
+            })
+
+        return {
+            "conversations": conversation_list,
+            "total_count": len(conversation_list),
+            "user_id": user_id
+        }
+
+    async def _handle_get_conversation(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle get_conversation operation with user_id filtering
+        """
+        user_id = tool_request.user_id
+        conversation_id = tool_request.parameters.get('conversation_id')
+
+        conversation_service = ConversationService(self.session)
+        conversation = conversation_service.get_conversation_by_id(
+            conversation_id=conversation_id,
+            user_id=user_id
+        )
+
+        if not conversation:
+            return {
+                "error": f"Conversation {conversation_id} not found or not owned by user {user_id}",
+                "status": "failed"
+            }
+
+        return {
+            "conversation_id": conversation.id,
+            "title": conversation.title,
+            "created_at": conversation.created_at.isoformat() if conversation.created_at else None,
+            "updated_at": conversation.updated_at.isoformat() if conversation.updated_at else None,
+            "metadata": conversation.metadata,
+            "status": "retrieved",
+            "user_id": user_id
+        }
+
+    async def _handle_add_message(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle add_message operation with user_id and conversation_id filtering
+        """
+        user_id = tool_request.user_id
+        conversation_id = tool_request.parameters.get('conversation_id')
+        content = tool_request.parameters.get('content', '')
+        role = tool_request.parameters.get('role', 'user')
+        metadata = tool_request.parameters.get('metadata', {})
+
+        message_data = MessageCreate(
+            conversation_id=conversation_id,
+            user_id=user_id,
+            role=role,
+            content=content,
+            metadata=metadata
+        )
+
+        conversation_service = ConversationService(self.session)
+        message = conversation_service.add_message_to_conversation(
+            user_id=user_id,
+            conversation_id=conversation_id,
+            message_data=message_data
+        )
+
+        return {
+            "message_id": message.id,
+            "content": message.content,
+            "role": message.role,
+            "status": "created",
+            "user_id": user_id,
+            "conversation_id": conversation_id
+        }
+
+    async def _handle_get_messages(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle get_messages operation with user_id and conversation_id filtering
+        """
+        user_id = tool_request.user_id
+        conversation_id = tool_request.parameters.get('conversation_id')
+        limit = tool_request.parameters.get('limit', 50)
+        offset = tool_request.parameters.get('offset', 0)
+
+        conversation_service = ConversationService(self.session)
+        messages = conversation_service.get_conversation_messages(
+            conversation_id=conversation_id,
+            user_id=user_id,
+            limit=limit,
+            offset=offset
+        )
+
+        message_list = []
+        for msg in messages:
+            message_list.append({
+                "id": msg.id,
+                "content": msg.content,
+                "role": msg.role,
+                "timestamp": msg.timestamp.isoformat() if msg.timestamp else None,
+                "metadata": msg.metadata
+            })
+
+        return {
+            "messages": message_list,
+            "total_count": len(message_list),
+            "conversation_id": conversation_id,
+            "user_id": user_id
+        }
+
+    async def _handle_delete_conversation(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle delete_conversation operation with user_id filtering
+        """
+        user_id = tool_request.user_id
+        conversation_id = tool_request.parameters.get('conversation_id')
+
+        conversation_service = ConversationService(self.session)
+        success = conversation_service.delete_conversation(
+            conversation_id=conversation_id,
+            user_id=user_id
+        )
+
+        if not success:
+            return {
+                "error": f"Conversation {conversation_id} not found or not owned by user {user_id}",
+                "status": "failed"
+            }
+
+        return {
+            "conversation_id": conversation_id,
+            "status": "deleted",
+            "user_id": user_id
+        }
+
+    async def _handle_conversation_operation(self, tool_request: MCPToolRequest) -> Dict[str, Any]:
+        """
+        Handle generic conversation operations
+        """
+        await asyncio.sleep(0.1)  # Simulate processing time
+        return {
+            "operation": tool_request.action,
+            "user_id": tool_request.user_id,
+            "parameters_used": tool_request.parameters,
+            "status": "completed"
         }
 
     async def log_tool_access(
