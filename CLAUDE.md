@@ -258,6 +258,8 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 - Python 3.11, JavaScript/TypeScript, Next.js 16+ + FastAPI, Better Auth, JWT, SQLModel, Neon PostgreSQL, Pydantic (005-auth-jwt-specification)
 - Neon Serverless PostgreSQL with SQLModel ORM (005-auth-jwt-specification)
 - Python 3.11, JavaScript/TypeScript + FastAPI, SQLModel, Neon Serverless PostgreSQL, Better Auth, MCP SDK (007-mcp-tools)
+- Python 3.11, JavaScript/TypeScript + OpenAI Agents SDK, FastAPI, Better Auth, SQLModel (008-agent-behavior)
+- Neon Serverless PostgreSQL (for conversation history) (008-agent-behavior)
 
 ## Recent Changes
 - 001-auth-identity: Added Python 3.11, JavaScript/TypeScript, Next.js 16+ + Better Auth (frontend), FastAPI (backend), SQLModel (ORM), Neon Serverless PostgreSQL (database)
