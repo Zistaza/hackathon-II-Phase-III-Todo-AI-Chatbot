@@ -87,9 +87,9 @@ class ConversationService:
 
         return conversation
 
-    def get_user_conversations(self, user_id: str, limit: int = 10, offset: int = 0) -> List[Conversation]:
+    def get_by_user(self, user_id: str, limit: int = 10, offset: int = 0) -> List[Conversation]:
         """
-        Get all conversations for a user
+        Get all conversations for a user (matching the task requirement)
 
         Args:
             user_id: ID of the user whose conversations to retrieve
@@ -114,6 +114,20 @@ class ConversationService:
         self._set_cache(cache_key, conversations)
 
         return conversations
+
+    def get_user_conversations(self, user_id: str, limit: int = 10, offset: int = 0) -> List[Conversation]:
+        """
+        Get all conversations for a user
+
+        Args:
+            user_id: ID of the user whose conversations to retrieve
+            limit: Maximum number of conversations to return
+            offset: Number of conversations to skip
+
+        Returns:
+            List of Conversation objects
+        """
+        return self.get_by_user(user_id, limit, offset)
 
     def get_conversation_by_id(self, conversation_id: str, user_id: str) -> Optional[Conversation]:
         """

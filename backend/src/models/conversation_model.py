@@ -1,5 +1,5 @@
-from sqlmodel import SQLModel, Field
-from typing import Optional
+from sqlmodel import SQLModel, Field, Relationship
+from typing import Optional, List
 from datetime import datetime
 import uuid
 
@@ -32,6 +32,10 @@ class Conversation(ConversationBase, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)  # Add index for chronological queries
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     metadata: Optional[dict] = Field(default=None)  # JSON field
+
+    # Relationships
+    messages: List["Message"] = Relationship(back_populates="conversation")
+    tool_calls: List["ToolCall"] = Relationship(back_populates="conversation")
 
 
 class ConversationCreate(ConversationBase):
