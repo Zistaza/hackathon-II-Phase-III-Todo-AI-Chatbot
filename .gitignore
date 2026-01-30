@@ -113,7 +113,21 @@ pids/
 
 # Temporary folders
 temp/
+# Temporary / local test scripts
 tmp/test-backend.js
 test_classifier.py
 test_comprehensive_natural_language.py
 test_natural_language_commands.py
+tmp/.venv/
+
+# Backend virtual env
+backend/venv/
+backend/.venv/
+
+# Frontend node_modules & build
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+frontend/.turbo/
+frontend/*.log
+
