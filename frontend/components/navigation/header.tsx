@@ -68,7 +68,7 @@ export const Header: React.FC = () => {
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button variant="default" size="md" className="bg-gradient-to-r from-primary to-indigo-500 hover:from-primary/90 hover:to-indigo-500/90 text-white transition-all duration-200 transform hover:scale-105 rounded-lg px-4 py-2 shadow-md hover:shadow-lg">
+                  <Button variant="primary" size="md" className="bg-gradient-to-r from-primary to-indigo-500 hover:from-primary/90 hover:to-indigo-500/90 text-white transition-all duration-200 transform hover:scale-105 rounded-lg px-4 py-2 shadow-md hover:shadow-lg">
                     Register
                   </Button>
                 </Link>
