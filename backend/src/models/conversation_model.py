@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import JSON
 from typing import Optional, List
 from datetime import datetime
 import uuid
@@ -9,7 +10,7 @@ class ConversationBase(SQLModel):
     Base model for conversation with common fields
     """
     title: Optional[str] = Field(default=None, max_length=255)
-    metadata: Optional[dict] = Field(default=None)  # JSON field for additional settings
+    conversation_metadata: Optional[dict] = Field(default=None, sa_type=JSON)  # JSON field for additional settings
 
 
 class Conversation(ConversationBase, table=True):
@@ -22,7 +23,7 @@ class Conversation(ConversationBase, table=True):
     - title: Conversation title (optional)
     - created_at: Conversation creation timestamp
     - updated_at: Last update timestamp
-    - metadata: Additional conversation metadata
+    - conversation_metadata: Additional conversation metadata
     """
     __tablename__ = "conversations"
 
@@ -31,7 +32,6 @@ class Conversation(ConversationBase, table=True):
     title: Optional[str] = Field(default=None, max_length=255)
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)  # Add index for chronological queries
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    metadata: Optional[dict] = Field(default=None)  # JSON field
 
     # Relationships
     messages: List["Message"] = Relationship(back_populates="conversation")
@@ -50,7 +50,7 @@ class ConversationUpdate(SQLModel):
     Model for updating conversation information
     """
     title: Optional[str] = None
-    metadata: Optional[dict] = None
+    conversation_metadata: Optional[dict] = Field(default=None, sa_type=JSON)
 
 
 class ConversationPublic(ConversationBase):

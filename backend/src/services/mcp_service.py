@@ -406,7 +406,7 @@ class MCPTOOL_SERVICE:
                 "title": conv.title,
                 "created_at": conv.created_at.isoformat() if conv.created_at else None,
                 "updated_at": conv.updated_at.isoformat() if conv.updated_at else None,
-                "metadata": conv.metadata
+                "metadata": conv.conversation_metadata
             })
 
         return {
@@ -439,7 +439,7 @@ class MCPTOOL_SERVICE:
             "title": conversation.title,
             "created_at": conversation.created_at.isoformat() if conversation.created_at else None,
             "updated_at": conversation.updated_at.isoformat() if conversation.updated_at else None,
-            "metadata": conversation.metadata,
+            "metadata": conversation.conversation_metadata,
             "status": "retrieved",
             "user_id": user_id
         }

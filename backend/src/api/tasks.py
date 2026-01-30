@@ -31,6 +31,8 @@ async def get_tasks(
     # Verify that the user_id in the URL matches the user_id from the JWT
     # This ensures multi-tenant data isolation
     if user_id != current_user.user_id:
+        # Log the mismatch for debugging
+        print(f"DEBUG: User ID mismatch in get tasks - URL user_id: {user_id}, JWT user_id: {current_user.user_id}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: Cannot access another user's tasks"
@@ -65,6 +67,8 @@ async def create_task(
     """
     # Verify that the user_id in the URL matches the user_id from the JWT
     if user_id != current_user.user_id:
+        # Log the mismatch for debugging
+        print(f"DEBUG: User ID mismatch in task creation - URL user_id: {user_id}, JWT user_id: {current_user.user_id}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: Cannot create tasks for another user"
@@ -106,6 +110,8 @@ async def get_task(
     """
     # Verify that the user_id in the URL matches the user_id from the JWT
     if user_id != current_user.user_id:
+        # Log the mismatch for debugging
+        print(f"DEBUG: User ID mismatch in get task by ID - URL user_id: {user_id}, JWT user_id: {current_user.user_id}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: Cannot access another user's task"
@@ -147,6 +153,8 @@ async def update_task(
     """
     # Verify that the user_id in the URL matches the user_id from the JWT
     if user_id != current_user.user_id:
+        # Log the mismatch for debugging
+        print(f"DEBUG: User ID mismatch in update task - URL user_id: {user_id}, JWT user_id: {current_user.user_id}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: Cannot update another user's task"
@@ -195,6 +203,8 @@ async def delete_task(
     """
     # Verify that the user_id in the URL matches the user_id from the JWT
     if user_id != current_user.user_id:
+        # Log the mismatch for debugging
+        print(f"DEBUG: User ID mismatch in delete task - URL user_id: {user_id}, JWT user_id: {current_user.user_id}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: Cannot delete another user's task"
@@ -238,6 +248,8 @@ async def toggle_task_completion(
     """
     # Verify that the user_id in the URL matches the user_id from the JWT
     if user_id != current_user.user_id:
+        # Log the mismatch for debugging
+        print(f"DEBUG: User ID mismatch in toggle task completion - URL user_id: {user_id}, JWT user_id: {current_user.user_id}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: Cannot modify another user's task"

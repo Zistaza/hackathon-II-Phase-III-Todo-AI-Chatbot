@@ -43,7 +43,7 @@ class MessageService:
             user_id=message_data.user_id,
             role=message_data.role,
             content=message_data.content,
-            metadata=message_data.metadata
+            message_metadata=message_data.message_metadata
         )
 
         self.session.add(message)
