@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/auth-context';
 import { Header } from '../../components/navigation/header';
 import { Providers } from '../../providers';
 import { TodoProvider } from '../../contexts/todo-context';
+import FloatingChatIcon from '../../components/FloatingChatIcon';
 
 export default function DashboardLayout({
   children,
@@ -49,6 +50,7 @@ export default function DashboardLayout({
           <main className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
             {children}
           </main>
+          <FloatingChatIcon />
         </div>
       </TodoProvider>
     </Providers>

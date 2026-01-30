@@ -23,10 +23,13 @@ interface ChatMessage {
 
 interface ChatResponse {
   response: string;
-  toolCallResults: ToolCallResult[];
-  conversationHistory: ChatMessage[];
-  sessionId: string;
+  message_id: string;
   timestamp: string;
+  conversation_id: string;
+  // For compatibility with ChatInterface, we'll add the expected fields
+  toolCallResults?: ToolCallResult[];
+  conversationHistory?: ChatMessage[];
+  sessionId?: string;
 }
 
 class ApiService {
@@ -35,21 +38,50 @@ class ApiService {
 
   constructor() {
     this.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-    this.jwtToken = typeof window !== 'undefined' ? localStorage.getItem('jwtToken') : null;
+    this.jwtToken = this.getToken();
+  }
+
+  // Get token from both localStorage and cookies
+  private getToken(): string | null {
+    if (typeof window !== 'undefined') {
+      // Check localStorage first
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        return token;
+      }
+
+      // Check cookies as fallback
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'authToken') {
+          return value;
+        }
+      }
+    }
+    return null;
   }
 
   // Set JWT token for authentication
   setAuthToken(token: string | null): void {
     this.jwtToken = token;
     if (typeof window !== 'undefined' && token) {
-      localStorage.setItem('jwtToken', token);
+      localStorage.setItem('authToken', token);
+      // Also set in cookies for consistency
+      const date = new Date();
+      date.setTime(date.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 days
+      document.cookie = `authToken=${token}; expires=${date.toUTCString()}; path=/; SameSite=Lax`;
     } else if (typeof window !== 'undefined') {
-      localStorage.removeItem('jwtToken');
+      localStorage.removeItem('authToken');
+      document.cookie = 'authToken=; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/;';
     }
   }
 
   // Get auth headers
   private getAuthHeaders(): { [key: string]: string } {
+    // Refresh token in case it was updated elsewhere
+    this.jwtToken = this.getToken();
+
     const headers: { [key: string]: string } = {
       'Content-Type': 'application/json',
     };
@@ -64,9 +96,16 @@ class ApiService {
   // Send a message to the chat endpoint
   async sendMessage(userId: string, request: ChatRequest): Promise<ChatResponse> {
     try {
+      // Transform the request to match the backend's ChatMessage format
+      const chatMessage = {
+        content: request.message,
+        role: "user", // Backend expects role as a string
+        timestamp: request.timestamp || new Date().toISOString()
+      };
+
       const response: AxiosResponse<ChatResponse> = await axios.post(
-        `${this.baseUrl}/api/${userId}/chat`,
-        request,
+        `${this.baseUrl}/api/chat/${userId}`,
+        chatMessage,
         {
           headers: this.getAuthHeaders(),
         }
@@ -93,14 +132,18 @@ class ApiService {
   // Fetch conversation history (if needed for restoration)
   async getConversationHistory(userId: string, sessionId?: string): Promise<ChatResponse> {
     try {
-      // We'll simulate getting conversation history by sending an empty message
-      // In a real implementation, you might have a dedicated endpoint for this
-      const request: ChatRequest = {
-        message: '',
-        sessionId,
+      // Currently, we'll return an empty conversation history since the backend
+      // doesn't have a specific endpoint for fetching full conversation history
+      // This is a simplified approach for now
+      return {
+        response: '',
+        message_id: '',
+        timestamp: new Date().toISOString(),
+        conversation_id: sessionId || '',
+        toolCallResults: [],
+        conversationHistory: [],
+        sessionId: sessionId,
       };
-
-      return await this.sendMessage(userId, request);
     } catch (error: any) {
       console.error('Error fetching conversation history:', error);
       throw error;
@@ -112,43 +155,48 @@ class ApiService {
     try {
       // If we have a session ID, try to restore that session
       if (sessionId) {
-        const request: ChatRequest = {
-          message: '',
-          sessionId,
+        // Currently, we'll return an empty conversation history since the backend
+        // doesn't have a specific endpoint for fetching full conversation history
+        // This is a simplified approach for now
+        return {
+          response: '',
+          message_id: '',
+          timestamp: new Date().toISOString(),
+          conversation_id: sessionId,
+          toolCallResults: [],
+          conversationHistory: [],
+          sessionId: sessionId,
         };
-
-        const response = await this.sendMessage(userId, request);
-
-        // Verify the response has valid conversation history
-        if (this.validateConversationHistory(response.conversationHistory)) {
-          return response;
-        }
       }
 
-      // If no session ID or restoration failed, return empty response
+      // If no session ID, return empty response
       return {
         response: '',
+        message_id: '',
+        timestamp: new Date().toISOString(),
+        conversation_id: '',
         toolCallResults: [],
         conversationHistory: [],
         sessionId: '',
-        timestamp: new Date().toISOString(),
       };
     } catch (error: any) {
       console.error('Error restoring conversation:', error);
       // Return empty conversation on error
       return {
         response: '',
+        message_id: '',
+        timestamp: new Date().toISOString(),
+        conversation_id: '',
         toolCallResults: [],
         conversationHistory: [],
         sessionId: '',
-        timestamp: new Date().toISOString(),
       };
     }
   }
 
   // Validate conversation history structure
-  private validateConversationHistory(history: any[]): boolean {
-    if (!Array.isArray(history)) {
+  private validateConversationHistory(history: any[] | undefined): boolean {
+    if (!history || !Array.isArray(history)) {
       return false;
     }
 

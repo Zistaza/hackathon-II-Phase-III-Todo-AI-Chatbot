@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/auth-context';
-import { chatService, ChatMessage, ChatResponse } from '../services/chat-service';
+import { chatService, ChatMessage } from '../services/chat-service';
 
 interface ChatProps {
   userId: string;
@@ -10,7 +10,7 @@ interface ChatProps {
 
 const ChatComponent: React.FC<ChatProps> = ({ userId }) => {
   const { state: authState } = useAuth();
-  const [messages, setMessages] = useState<(ChatMessage | ChatResponse)[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -51,7 +51,7 @@ const ChatComponent: React.FC<ChatProps> = ({ userId }) => {
           content: response.response,
           role: 'assistant',
           timestamp: new Date(response.timestamp),
-        } as ChatMessage,
+        },
       ]);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -61,7 +61,7 @@ const ChatComponent: React.FC<ChatProps> = ({ userId }) => {
           content: 'Sorry, there was an error processing your message.',
           role: 'system',
           timestamp: new Date(),
-        } as ChatMessage,
+        },
       ]);
     } finally {
       setIsLoading(false);
@@ -84,10 +84,10 @@ const ChatComponent: React.FC<ChatProps> = ({ userId }) => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-md p-4">
+    <div className="flex flex-col h-full bg-card border rounded-lg p-4">
       <div className="flex-1 overflow-y-auto mb-4 space-y-4 max-h-[400px]">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-8">
+          <div className="text-center text-muted-foreground mt-8">
             <p>Start a conversation with the AI assistant!</p>
           </div>
         ) : (
@@ -101,10 +101,10 @@ const ChatComponent: React.FC<ChatProps> = ({ userId }) => {
               <div
                 className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                   msg.role === 'user'
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : msg.role === 'assistant'
-                    ? 'bg-gray-200 text-gray-800'
-                    : 'bg-yellow-100 text-gray-800'
+                    ? 'bg-secondary text-secondary-foreground'
+                    : 'bg-destructive text-destructive-foreground'
                 }`}
               >
                 <p>{msg.content}</p>
@@ -126,13 +126,13 @@ const ChatComponent: React.FC<ChatProps> = ({ userId }) => {
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyPress}
           placeholder="Type your message..."
-          className="flex-1 border border-gray-300 rounded-lg p-2 resize-none min-h-[60px] max-h-[120px]"
+          className="flex-1 border border-input rounded-lg p-2 resize-none min-h-[60px] max-h-[120px]"
           disabled={isLoading}
         />
         <button
           onClick={handleSendMessage}
           disabled={!inputValue.trim() || isLoading}
-          className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isLoading ? 'Sending...' : 'Send'}
         </button>
