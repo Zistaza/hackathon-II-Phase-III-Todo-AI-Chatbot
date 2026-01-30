@@ -113,4 +113,7 @@ pids/
 
 # Temporary folders
 temp/
-tmp/
+tmp/test-backend.js
+test_classifier.py
+test_comprehensive_natural_language.py
+test_natural_language_commands.py
