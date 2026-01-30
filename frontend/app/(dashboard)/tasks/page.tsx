@@ -43,7 +43,7 @@ export default function TasksPage() {
       >
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6 mb-8">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-indigo-500 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold text-primary">
               My Tasks
             </h1>
             <p className="text-muted-foreground mt-2">
@@ -63,7 +63,7 @@ export default function TasksPage() {
               <AnimatedButton
                 variant="default"
                 size="md"
-                className="flex items-center gap-2 bg-gradient-to-r from-primary to-indigo-500"
+                className="flex items-center gap-2"
               >
                 <FiPlus className="w-4 h-4" />
                 Create Task

@@ -45,7 +45,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && <div className="text-red-500 text-sm">{error}</div>}
+      {error && <div className="text-destructive text-sm">{error}</div>}
 
       {/* Title input */}
       <Input

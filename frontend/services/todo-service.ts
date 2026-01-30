@@ -18,8 +18,15 @@ const getCurrentUserId = (): string | null => {
         // If direct parsing fails, try decoding first
         user = JSON.parse(decodeURIComponent(userDataStr));
       }
+
+      // Validate that the user object has an id property
+      if (!user || !user.id || typeof user.id !== 'string' || user.id.trim() === '') {
+        console.error('Invalid user data in cookie - missing or invalid id:', user);
+        return null;
+      }
+
       console.log('Retrieved user ID:', user.id); // Debug log
-      return user.id;
+      return user.id.trim();
     } catch (error) {
       console.error('Failed to parse user data from cookie:', error);
       return null;
@@ -32,30 +39,35 @@ const getCurrentUserId = (): string | null => {
 export const todoService = {
   // Get all tasks for the authenticated user
   getTasks: async (): Promise<Task[]> => {
-    try {
-      const userId = getCurrentUserId();
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
+    const userId = getCurrentUserId();
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
 
+    try {
       // Validate user ID format (should be a UUID-like string and URL-safe)
       if (!userId || typeof userId !== 'string' || userId.length < 10 || /[^\w\-]/.test(userId)) {
-        console.error('Invalid user ID format:', userId);
+        console.error('Invalid user ID format:', userId, '- Length:', userId?.length, '- Contains invalid chars:', userId ? /[^\w\-]/.test(userId) : 'N/A');
         throw new Error('Invalid user ID format');
       }
 
       // Log for debugging
       console.log('Fetching tasks for userId:', userId);
 
-      // Construct the full URL for debugging - include /api prefix
-      const url = `/api/${userId}/tasks`;
+      // Construct the full URL for debugging - apiInstance already includes /api prefix
+      const url = `/${userId}/tasks`;
       console.log('Making request to URL:', url);
 
-      const response = await apiInstance.get<Task[]>(url);
+      // Make sure the URL starts with a slash for relative path
+      const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
+      const response = await apiInstance.get<Task[]>(normalizedUrl);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching tasks:', error);
       console.error('Full error response:', error.response);
+      console.error('Error code:', error.code);
+      console.error('Request URL:', error.config?.url);
+      console.error('Request method:', error.config?.method);
 
       // Check if it's a 401 error specifically
       if (error.response?.status === 401) {
@@ -81,7 +93,19 @@ export const todoService = {
         throw new Error('User account not found. Please log in again.');
       }
 
-      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch tasks');
+      // Provide more detailed error information for debugging
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch tasks';
+      const errorDetails = {
+        message: errorMessage,
+        code: error.code,
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        response_data: error.response?.data
+      };
+
+      console.error('Detailed error information:', errorDetails);
+      throw new Error(errorMessage);
     }
   },
 
@@ -93,7 +117,13 @@ export const todoService = {
         throw new Error('User not authenticated');
       }
 
-      const response = await apiInstance.post<Task>(`/api/${userId}/tasks`, taskData);
+      // Validate user ID format before making the request
+      if (!userId || typeof userId !== 'string' || userId.length < 10 || /[^\w\-]/.test(userId)) {
+        console.error('Invalid user ID format for task creation:', userId, '- Length:', userId?.length, '- Contains invalid chars:', userId ? /[^\w\-]/.test(userId) : 'N/A');
+        throw new Error('Invalid user ID format');
+      }
+
+      const response = await apiInstance.post<Task>(`/${userId}/tasks`, taskData);
       return response.data;
     } catch (error: any) {
       console.error('Error creating task:', error);
@@ -104,6 +134,10 @@ export const todoService = {
         localStorage.removeItem('userData');
         window.location.href = '/login';
         throw new Error('Authentication expired. Please log in again.');
+      }
+      if (error.response?.status === 403) {
+        console.error('Access forbidden - user ID in URL does not match JWT user ID');
+        throw new Error('Access denied. Please log out and log back in to refresh your session.');
       }
       throw new Error(error.response?.data?.message || error.message || 'Failed to create task');
     }
@@ -117,7 +151,13 @@ export const todoService = {
         throw new Error('User not authenticated');
       }
 
-      const response = await apiInstance.get<Task>(`/api/${userId}/tasks/${taskId}`);
+      // Validate user ID format before making the request
+      if (!userId || typeof userId !== 'string' || userId.length < 10 || /[^\w\-]/.test(userId)) {
+        console.error('Invalid user ID format for getting task:', userId, '- Length:', userId?.length, '- Contains invalid chars:', userId ? /[^\w\-]/.test(userId) : 'N/A');
+        throw new Error('Invalid user ID format');
+      }
+
+      const response = await apiInstance.get<Task>(`/${userId}/tasks/${taskId}`);
       return response.data;
     } catch (error: any) {
       console.error('Error fetching task by ID:', error);
@@ -128,6 +168,10 @@ export const todoService = {
         localStorage.removeItem('userData');
         window.location.href = '/login';
         throw new Error('Authentication expired. Please log in again.');
+      }
+      if (error.response?.status === 403) {
+        console.error('Access forbidden - user ID in URL does not match JWT user ID');
+        throw new Error('Access denied. Please log out and log back in to refresh your session.');
       }
       throw new Error(error.response?.data?.message || error.message || 'Failed to fetch task');
     }
@@ -141,7 +185,13 @@ export const todoService = {
         throw new Error('User not authenticated');
       }
 
-      const response = await apiInstance.put<Task>(`/api/${userId}/tasks/${taskId}`, taskData);
+      // Validate user ID format before making the request
+      if (!userId || typeof userId !== 'string' || userId.length < 10 || /[^\w\-]/.test(userId)) {
+        console.error('Invalid user ID format for updating task:', userId, '- Length:', userId?.length, '- Contains invalid chars:', userId ? /[^\w\-]/.test(userId) : 'N/A');
+        throw new Error('Invalid user ID format');
+      }
+
+      const response = await apiInstance.put<Task>(`/${userId}/tasks/${taskId}`, taskData);
       return response.data;
     } catch (error: any) {
       console.error('Error updating task:', error);
@@ -152,6 +202,10 @@ export const todoService = {
         localStorage.removeItem('userData');
         window.location.href = '/login';
         throw new Error('Authentication expired. Please log in again.');
+      }
+      if (error.response?.status === 403) {
+        console.error('Access forbidden - user ID in URL does not match JWT user ID');
+        throw new Error('Access denied. Please log out and log back in to refresh your session.');
       }
       throw new Error(error.response?.data?.message || error.message || 'Failed to update task');
     }
@@ -165,7 +219,13 @@ export const todoService = {
         throw new Error('User not authenticated');
       }
 
-      await apiInstance.delete(`/api/${userId}/tasks/${taskId}`);
+      // Validate user ID format before making the request
+      if (!userId || typeof userId !== 'string' || userId.length < 10 || /[^\w\-]/.test(userId)) {
+        console.error('Invalid user ID format for deleting task:', userId, '- Length:', userId?.length, '- Contains invalid chars:', userId ? /[^\w\-]/.test(userId) : 'N/A');
+        throw new Error('Invalid user ID format');
+      }
+
+      await apiInstance.delete(`/${userId}/tasks/${taskId}`);
     } catch (error: any) {
       console.error('Delete task error:', error);
       if (error.response?.status === 401) {
@@ -175,6 +235,10 @@ export const todoService = {
         localStorage.removeItem('userData');
         window.location.href = '/login';
         throw new Error('Authentication expired. Please log in again.');
+      }
+      if (error.response?.status === 403) {
+        console.error('Access forbidden - user ID in URL does not match JWT user ID');
+        throw new Error('Access denied. Please log out and log back in to refresh your session.');
       }
       throw new Error(error.response?.data?.detail || error.response?.data?.message || 'Failed to delete task');
     }
@@ -188,7 +252,13 @@ export const todoService = {
         throw new Error('User not authenticated');
       }
 
-      const response = await apiInstance.patch(`/api/${userId}/tasks/${taskId}/complete`);
+      // Validate user ID format before making the request
+      if (!userId || typeof userId !== 'string' || userId.length < 10 || /[^\w\-]/.test(userId)) {
+        console.error('Invalid user ID format for toggling task completion:', userId, '- Length:', userId?.length, '- Contains invalid chars:', userId ? /[^\w\-]/.test(userId) : 'N/A');
+        throw new Error('Invalid user ID format');
+      }
+
+      const response = await apiInstance.patch(`/${userId}/tasks/${taskId}/complete`);
       return response.data;
     } catch (error: any) {
       console.error('Error toggling task completion:', error);
@@ -199,6 +269,10 @@ export const todoService = {
         localStorage.removeItem('userData');
         window.location.href = '/login';
         throw new Error('Authentication expired. Please log in again.');
+      }
+      if (error.response?.status === 403) {
+        console.error('Access forbidden - user ID in URL does not match JWT user ID');
+        throw new Error('Access denied. Please log out and log back in to refresh your session.');
       }
       throw new Error(error.response?.data?.message || error.message || 'Failed to toggle task completion');
     }

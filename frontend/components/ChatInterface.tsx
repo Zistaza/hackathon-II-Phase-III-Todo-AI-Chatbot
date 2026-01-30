@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
 import MessageRenderer from './MessageRenderer';
 import InputValidator from './InputValidator';
 import ErrorHandler from './ErrorHandler';
@@ -73,14 +73,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId: propUserId, sessi
             }
           }
 
-          // Process the restored messages
-          const restoredMessages: ChatMessage[] = response.conversationHistory.map(msg => ({
-            id: msg.id,
-            content: msg.content,
-            role: msg.sender.toLowerCase() as 'user' | 'assistant',
-            timestamp: msg.timestamp,
-            status: 'delivered' as const,
-          }));
+          // Process the restored messages - check if conversationHistory exists
+          const restoredMessages: ChatMessage[] = response.conversationHistory
+            ? response.conversationHistory.map(msg => ({
+                id: msg.id,
+                content: msg.content,
+                role: msg.sender.toLowerCase() as 'user' | 'assistant',
+                timestamp: msg.timestamp,
+                status: 'delivered' as const,
+              }))
+            : [];
 
           setMessages(restoredMessages);
         } catch (err) {
@@ -136,23 +138,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId: propUserId, sessi
       const response = await apiService.sendMessage(userId, chatRequest);
 
       // Update session ID if new one was returned
-      if (response.sessionId && response.sessionId !== sessionId) {
-        setSessionId(response.sessionId);
+      // Backend returns conversation_id instead of sessionId
+      const newSessionId = response.sessionId || response.conversation_id;
+      if (newSessionId && newSessionId !== sessionId) {
+        setSessionId(newSessionId);
         if (onSessionChange) {
-          onSessionChange(response.sessionId);
+          onSessionChange(newSessionId);
         }
       }
 
-      // Process the response messages
-      const assistantMessages: ChatMessage[] = response.conversationHistory
-        .filter(msg => msg.sender === 'ASSISTANT')
-        .map(msg => ({
-          id: msg.id,
-          content: msg.content,
-          role: 'assistant' as const,
-          timestamp: msg.timestamp,
-          status: 'delivered' as const,
-        }));
+      // Process the response message - backend returns single response
+      // We'll create a single assistant message from the response
+      const assistantMessages: ChatMessage[] = [{
+        id: response.message_id || generateId(),
+        content: response.response,
+        role: 'assistant',
+        timestamp: response.timestamp || new Date().toISOString(),
+        status: 'delivered' as const,
+      }];
 
       // Update the user message status to delivered
       setMessages(prev =>
@@ -219,19 +222,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId: propUserId, sessi
   };
 
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto bg-background border border-border rounded-lg shadow-sm overflow-hidden">
+    <div className="flex flex-col h-full max-w-4xl mx-auto bg-background border border-border rounded-2xl shadow-xl overflow-hidden btn-enhanced">
       {/* Chat header */}
-      <div className="bg-primary text-primary-foreground p-4">
-        <h2 className="text-xl font-semibold">Todo AI Assistant</h2>
-        <p className="text-sm opacity-80">Manage your todos with natural language</p>
+      <div className="bg-gradient-to-r from-primary to-indigo-500 text-primary-foreground p-6">
+        <h2 className="text-2xl font-bold">Todo AI Assistant</h2>
+        <p className="text-sm opacity-90 mt-1">Manage your todos with natural language</p>
       </div>
 
       {/* Messages container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/10">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-muted/10">
         {messages.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>Start a conversation by typing a message below!</p>
-            <p className="text-sm mt-2">Try: "Add a task to buy groceries" or "Show me my tasks"</p>
+          <div className="text-center py-12 text-muted-foreground animate-fade-in">
+            <p className="text-lg">Start a conversation by typing a message below!</p>
+            <p className="text-base mt-3 opacity-75">Try: "Add a task to buy groceries" or "Show me my tasks"</p>
           </div>
         ) : (
           messages.map((message) => (
@@ -243,23 +246,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId: propUserId, sessi
           ))
         )}
         {isLoading && (
-          <div className="flex items-center space-x-2 p-3 bg-secondary rounded-lg">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-            <span className="text-sm text-muted-foreground">AI is thinking...</span>
+          <div className="flex items-center space-x-3 p-4 bg-secondary rounded-xl animate-pulse">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <span className="text-base text-muted-foreground">AI is thinking...</span>
           </div>
         )}
       </div>
 
       {/* Error display */}
       {error && (
-        <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-b-lg">
+        <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-b-2xl animate-pulse">
           <ErrorHandler errorMessage={error} />
         </div>
       )}
 
       {/* Input area */}
-      <div className="border-t bg-background p-4">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+      <div className="border-t bg-background p-6">
+        <form onSubmit={handleSubmit} className="flex gap-4">
           <InputValidator
             value={input}
             onChange={handleInputChange}
@@ -269,12 +272,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ userId: propUserId, sessi
           <button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-primary to-indigo-500 text-primary-foreground rounded-xl hover:from-primary/90 hover:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed btn-enhanced text-lg font-semibold"
           >
             Send
           </button>
         </form>
-        <p className="text-xs text-muted-foreground mt-2 text-center">
+        <p className="text-sm text-muted-foreground mt-3 text-center animate-float">
           AI assistant can help you manage your todos using natural language
         </p>
       </div>

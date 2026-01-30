@@ -83,8 +83,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for existing token on initial load
   useEffect(() => {
-    const token = getCookie('authToken');
-    const userDataStr = getCookie('userData');
+    // First check cookies (for server-side consistency)
+    let token = getCookie('authToken');
+    let userDataStr = getCookie('userData');
+
+    // If not in cookies, fallback to localStorage
+    if (!token) {
+      token = localStorage.getItem('authToken');
+    }
+    if (!userDataStr) {
+      userDataStr = localStorage.getItem('userData');
+    }
 
     if (token && userDataStr) {
       try {
@@ -95,8 +104,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       } catch (error) {
         console.error('Failed to parse stored user data:', error);
+        // Clear both cookies and localStorage if there's an error
         removeCookie('authToken');
         removeCookie('userData');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
         dispatch({ type: SET_LOADING, payload: false });
       }
     } else {
@@ -109,6 +121,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setCookie('authToken', token, 7); // Store for 7 days
     setCookie('userData', JSON.stringify(user), 7); // Store for 7 days
+    // Also store in localStorage for client-side access consistency
+    localStorage.setItem('authToken', token);
+    localStorage.setItem('userData', JSON.stringify(user));
 
     dispatch({
       type: LOGIN_SUCCESS,
@@ -120,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     removeCookie('authToken');
     removeCookie('userData');
     // Clear localStorage as well to ensure no user data remains
+    localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
 
     dispatch({ type: LOGOUT });

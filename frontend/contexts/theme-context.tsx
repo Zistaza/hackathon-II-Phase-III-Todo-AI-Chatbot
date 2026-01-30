@@ -56,16 +56,26 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Update CSS variables
     if (theme === 'dark') {
-      root.style.setProperty('--background', '#0a0a0a');
-      root.style.setProperty('--foreground', '#ededed');
+      root.style.setProperty('--background', 'var(--background)');
+      root.style.setProperty('--foreground', 'var(--foreground)');
     } else {
-      root.style.setProperty('--background', '#ffffff');
-      root.style.setProperty('--foreground', '#111111');
+      root.style.setProperty('--background', 'var(--background)');
+      root.style.setProperty('--foreground', 'var(--foreground)');
     }
+
+    // Apply smooth transition
+    root.style.setProperty('transition', 'all 0.3s ease');
 
     // Save to localStorage
     localStorage.setItem('theme', theme);
     localStorage.setItem('isSystemPreferred', String(isSystemPreferred));
+
+    // Clean up transition after animation
+    const timer = setTimeout(() => {
+      root.style.removeProperty('transition');
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [theme, mounted, isSystemPreferred]);
 
   // Listen to system preference changes

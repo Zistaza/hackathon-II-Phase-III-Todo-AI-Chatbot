@@ -4,7 +4,7 @@ import axios from 'axios';
 import { UserRegistration, LoginRequest, AuthResponse } from '../types';
 import { setCookie, removeCookie, getCookie } from '../lib/cookies';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
 const BASE_URL = API_BASE_URL.replace('/api', ''); // Base URL without /api suffix for auth endpoints
 
 const authInstance = axios.create({

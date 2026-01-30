@@ -22,7 +22,7 @@ const ThemeToggle: React.FC = () => {
       <button
         onClick={toggleTheme}
         aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        className="relative rounded-full p-2 transition-colors duration-200 hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        className="relative rounded-full p-2 btn-enhanced hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         role="switch"
         aria-checked={theme === 'dark'}
       >

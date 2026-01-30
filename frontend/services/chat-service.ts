@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { getCookie } from '../lib/cookies';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
 
 const chatInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -71,7 +71,7 @@ export const chatService = {
    */
   sendMessage: async (userId: string, message: ChatMessage): Promise<ChatResponse> => {
     try {
-      const response = await chatInstance.post<ChatResponse>(`/${userId}/chat`, message);
+      const response = await chatInstance.post<ChatResponse>(`/chat/${userId}`, message);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Failed to send message');
@@ -86,7 +86,7 @@ export const chatService = {
     params: ChatHistoryRequest = {}
   ): Promise<ChatHistoryResponse> => {
     try {
-      const response = await chatInstance.get<ChatHistoryResponse>(`/${userId}/chat/history`, {
+      const response = await chatInstance.get<ChatHistoryResponse>(`/chat/${userId}/history`, {
         params,
       });
       return response.data;
@@ -100,7 +100,7 @@ export const chatService = {
    */
   deleteConversation: async (userId: string, conversationId: string): Promise<void> => {
     try {
-      await chatInstance.delete(`/${userId}/chat/conversation/${conversationId}`);
+      await chatInstance.delete(`/chat/${userId}/conversation/${conversationId}`);
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Failed to delete conversation');
     }

@@ -16,13 +16,24 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock IntersectionObserver
-class MockIntersectionObserver {
+class MockIntersectionObserver implements IntersectionObserver {
+  constructor(
+    callback: IntersectionObserverCallback,
+    options?: IntersectionObserverInit
+  ) {}
+
   observe = jest.fn();
   unobserve = jest.fn();
   disconnect = jest.fn();
+  root: Element | null = null;
+  rootMargin: string = '';
+  thresholds: readonly number[] = [];
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
 }
 
-window.IntersectionObserver = MockIntersectionObserver;
+window.IntersectionObserver = MockIntersectionObserver as any;
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {

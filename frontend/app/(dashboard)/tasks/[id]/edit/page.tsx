@@ -47,7 +47,7 @@ export default function EditTaskPage() {
   if (loading) {
     return (
       <div className="max-w-2xl mx-auto flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -56,7 +56,7 @@ export default function EditTaskPage() {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <Link href={`/tasks/${taskId}`} className="text-blue-600 hover:underline">
+          <Link href={`/tasks/${taskId}`} className="text-primary hover:underline">
             ← Back to Task
           </Link>
         </div>
@@ -79,7 +79,7 @@ export default function EditTaskPage() {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="mb-6">
-          <Link href="/tasks" className="text-blue-600 hover:underline">
+          <Link href="/tasks" className="text-primary hover:underline">
             ← Back to Tasks
           </Link>
         </div>
@@ -93,7 +93,7 @@ export default function EditTaskPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <Link href={`/tasks/${taskId}`} className="text-blue-600 hover:underline">
+        <Link href={`/tasks/${taskId}`} className="text-primary hover:underline">
           ← Back to Task
         </Link>
       </div>

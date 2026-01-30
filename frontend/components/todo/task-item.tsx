@@ -34,22 +34,22 @@ export const TaskItem: React.FC<TaskItemProps> = ({
       whileHover={{ scale: 0.98 }}
       whileTap={{ scale: 0.96 }}
       transition={{ duration: 0.3 }}
-      className={`group relative rounded-xl border-2 transition-all duration-300 ${
+      className={`group relative rounded-2xl border btn-enhanced ${
         task.completed
-          ? 'bg-muted/50 border-emerald-400/60 dark:border-emerald-500/70 shadow-sm hover:shadow-md hover:border-emerald-500/80 dark:hover:border-emerald-400/80'
-          : 'bg-card border-primary/50 dark:border-primary/60 shadow-sm hover:shadow-lg hover:border-primary/70 dark:hover:border-primary/80'
+          ? 'bg-muted/50 border-primary/30 shadow-sm hover:shadow-md hover:border-primary/40'
+          : 'bg-card border-primary/20 shadow-sm hover:shadow-lg hover:border-primary/30'
       }`}
     >
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start space-x-4 flex-1 min-w-0">
+      <div className="p-6">
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex items-start space-x-6 flex-1 min-w-0">
             <motion.button
               whileTap={!prefersReducedMotion ? { scale: 0.9 } : {}}
               onClick={() => onToggleCompletion(task.id)}
-              className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center mt-0.5 transition-all duration-200 ${
+              className={`flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center mt-1 transition-all duration-200 ${
                 task.completed
-                  ? 'bg-emerald-500 border-emerald-500 text-white'
-                  : 'border-input hover:border-primary dark:border-input dark:hover:border-primary'
+                  ? 'bg-primary border-primary text-white'
+                  : 'border-input hover:border-primary'
               }`}
               aria-label={task.completed ? 'Mark as incomplete' : 'Mark as complete'}
             >
@@ -58,8 +58,8 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
-                  width="12"
-                  height="12"
+                  width="16"
+                  height="16"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -73,8 +73,8 @@ export const TaskItem: React.FC<TaskItemProps> = ({
             </motion.button>
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className={`font-semibold truncate ${
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className={`font-semibold text-lg ${
                   task.completed
                     ? 'line-through text-muted-foreground'
                     : 'text-foreground'
@@ -82,15 +82,15 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                   {task.title}
                 </h3>
                 {task.completed && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                    <FiCheck className="w-3 h-3 mr-1" />
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary">
+                    <FiCheck className="w-4 h-4 mr-2" />
                     Completed
                   </span>
                 )}
               </div>
 
               {task.description && (
-                <p className={`text-sm mt-1 break-words max-h-12 overflow-hidden ${
+                <p className={`text-base mt-2 break-words ${
                   task.completed
                     ? 'line-through text-muted-foreground'
                     : 'text-muted-foreground'
@@ -99,14 +99,14 @@ export const TaskItem: React.FC<TaskItemProps> = ({
                 </p>
               )}
 
-              <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <FiCalendar className="w-3 h-3" />
+              <div className="flex flex-wrap items-center gap-6 mt-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <FiCalendar className="w-4 h-4" />
                   <span>Created: {new Date(task.created_at).toLocaleDateString()}</span>
                 </div>
                 {task.completed && (
-                  <div className="flex items-center gap-1">
-                    <FiCheck className="w-3 h-3" />
+                  <div className="flex items-center gap-2">
+                    <FiCheck className="w-4 h-4" />
                     <span>Completed: {new Date(task.updated_at || task.created_at).toLocaleDateString()}</span>
                   </div>
                 )}
@@ -114,25 +114,25 @@ export const TaskItem: React.FC<TaskItemProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-3 ml-6">
             <Link href={`/tasks/${task.id}/edit`}>
               <AnimatedButton
                 variant="outline"
-                size="sm"
-                className="h-10 w-10 p-0 hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary rounded-lg"
+                size="md"
+                className="h-12 w-12 p-0 hover:bg-primary/10 hover:text-primary dark:hover:bg-primary/10 dark:hover:text-primary rounded-xl"
                 aria-label="Edit task"
               >
-                <FiEdit2 className="w-5 h-5" />
+                <FiEdit2 className="w-6 h-6" />
               </AnimatedButton>
             </Link>
             <AnimatedButton
               variant="outline"
-              size="sm"
-              className="h-10 w-10 p-0 hover:bg-destructive/10 hover:text-destructive border-destructive/20 dark:hover:bg-destructive/10 dark:hover:text-destructive dark:border-destructive/30 rounded-lg"
+              size="md"
+              className="h-12 w-12 p-0 hover:bg-destructive/10 hover:text-destructive border-destructive/20 dark:hover:bg-destructive/10 dark:hover:text-destructive dark:border-destructive/30 rounded-xl"
               onClick={() => onDelete(task.id)}
               aria-label="Delete task"
             >
-              <FiTrash2 className="w-5 h-5" />
+              <FiTrash2 className="w-6 h-6" />
             </AnimatedButton>
           </div>
         </div>
@@ -140,7 +140,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({
 
       {/* Progress indicator bar */}
       {!task.completed && (
-        <div className="h-0.5 bg-gradient-to-r from-primary/20 to-transparent" />
+        <div className="h-1.5 bg-gradient-to-r from-primary/20 to-transparent" />
       )}
     </motion.div>
   );

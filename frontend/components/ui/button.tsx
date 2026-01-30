@@ -16,18 +16,18 @@ export const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center rounded-lg font-semibold transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background active:scale-[0.98] shadow-sm hover:shadow-md';
+  const baseClasses = 'inline-flex items-center justify-center rounded-lg font-semibold btn-enhanced focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background shadow-sm whitespace-nowrap';
 
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-primary to-indigo-500 text-primary-foreground hover:from-primary/90 hover:to-indigo-600 active:from-purple-500 active:to-purple-600 active:text-white',
-    secondary: 'bg-gradient-to-r from-secondary to-gray-400 text-secondary-foreground hover:from-secondary/90 hover:to-gray-500 active:from-purple-500 active:to-purple-600 active:text-white',
-    danger: 'bg-gradient-to-r from-destructive to-rose-600 text-destructive-foreground hover:from-destructive/90 hover:to-rose-700 active:from-purple-500 active:to-purple-600 active:text-white',
+    primary: 'bg-gradient-to-r from-primary to-indigo-500 text-primary-foreground hover:from-primary/90 hover:to-indigo-600 active:from-primary/80 active:to-indigo-700',
+    secondary: 'bg-gradient-to-r from-secondary to-gray-400 text-secondary-foreground hover:from-secondary/90 hover:to-gray-500 active:from-secondary/80 active:to-gray-600',
+    danger: 'bg-gradient-to-r from-destructive to-rose-600 text-destructive-foreground hover:from-destructive/90 hover:to-rose-700 active:from-destructive/80 active:to-rose-800',
   };
 
   const sizeClasses = {
-    sm: 'h-9 px-3 text-sm',
-    md: 'h-10 px-4 py-2',
-    lg: 'h-11 px-8 text-lg',
+    sm: 'h-10 min-h-10 px-4 text-sm',
+    md: 'h-12 min-h-12 px-6 text-base',
+    lg: 'h-14 min-h-14 px-8 text-lg',
   };
 
   const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;

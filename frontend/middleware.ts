@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Middleware to protect routes
 export function middleware(request: NextRequest) {
-  // Get the token from cookies or localStorage (if available on server)
-  const token = request.cookies.get('authToken')?.value || null;
+  // Get the token from cookies (primary) or Authorization header (fallback)
+  let token = request.cookies.get('authToken')?.value || null;
+
+  // If not in cookies, check Authorization header as fallback
+  if (!token) {
+    const authHeader = request.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+  }
 
   // Define protected routes
-  const protectedPaths = ['/dashboard', '/tasks'];
+  const protectedPaths = ['/dashboard', '/tasks', '/chat']; // Added /chat to protected paths
   const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   );
