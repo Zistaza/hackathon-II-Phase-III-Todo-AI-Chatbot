@@ -80,7 +80,7 @@ export default function TaskDetailPage() {
           <Button
             variant="secondary"
             size="sm"
-            className="mt-2"
+            className="mt-2 rounded-lg hover-lift"
             onClick={() => router.back()}
           >
             Go Back
@@ -122,6 +122,7 @@ export default function TaskDetailPage() {
             <Button
               variant={task.completed ? 'secondary' : 'primary'}
               onClick={handleToggleCompletion}
+              className="rounded-lg hover-lift"
             >
               {task.completed ? 'Mark Incomplete' : 'Mark Complete'}
             </Button>
@@ -154,9 +155,9 @@ export default function TaskDetailPage() {
 
           <div className="flex space-x-3 mt-6">
             <Link href={`/tasks/${task.id}/edit`}>
-              <Button variant="secondary">Edit Task</Button>
+              <Button variant="secondary" className="rounded-lg hover-lift">Edit Task</Button>
             </Link>
-            <Button variant="danger" onClick={handleDelete}>
+            <Button variant="danger" onClick={handleDelete} className="rounded-lg hover-lift">
               Delete Task
             </Button>
           </div>

@@ -47,24 +47,19 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!mounted) return;
 
     const root = document.documentElement;
+    const body = document.body;
 
     // Remove old theme classes
     root.classList.remove('light', 'dark');
+    body.classList.remove('light', 'dark');
 
-    // Add new theme class
+    // Add new theme class to both html and body elements for better consistency
     root.classList.add(theme);
+    body.classList.add(theme);
 
-    // Update CSS variables
-    if (theme === 'dark') {
-      root.style.setProperty('--background', 'var(--background)');
-      root.style.setProperty('--foreground', 'var(--foreground)');
-    } else {
-      root.style.setProperty('--background', 'var(--background)');
-      root.style.setProperty('--foreground', 'var(--foreground)');
-    }
-
-    // Apply smooth transition
+    // Apply smooth transition to both html and body
     root.style.setProperty('transition', 'all 0.3s ease');
+    body.style.setProperty('transition', 'all 0.3s ease');
 
     // Save to localStorage
     localStorage.setItem('theme', theme);
@@ -73,6 +68,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Clean up transition after animation
     const timer = setTimeout(() => {
       root.style.removeProperty('transition');
+      body.style.removeProperty('transition');
     }, 300);
 
     return () => clearTimeout(timer);

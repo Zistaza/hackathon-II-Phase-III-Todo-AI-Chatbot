@@ -4,9 +4,9 @@ import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../contexts/auth-context';
 import { Header } from '../../components/navigation/header';
-import { Providers } from '../../providers';
 import { TodoProvider } from '../../contexts/todo-context';
 import FloatingChatIcon from '../../components/FloatingChatIcon';
+import { useTheme } from '../../contexts/theme-context'; // Import useTheme to ensure theme is applied
 
 export default function DashboardLayout({
   children,
@@ -14,12 +14,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { state } = useAuth();
+  const { theme } = useTheme(); // Use theme to ensure it's applied
 
   // Show loading state while checking authentication
   // The middleware will handle redirecting unauthenticated users to login
   if (state.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <p>Loading...</p>
         </div>
@@ -34,7 +35,7 @@ export default function DashboardLayout({
     // Just render a message indicating redirection is happening
     typeof window !== 'undefined' && (window.location.href = '/login');
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <p>Redirecting to login...</p>
         </div>
@@ -43,16 +44,14 @@ export default function DashboardLayout({
   }
 
   return (
-    <Providers>
-      <TodoProvider>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <main className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            {children}
-          </main>
-          <FloatingChatIcon />
-        </div>
-      </TodoProvider>
-    </Providers>
+    <TodoProvider>
+      <div className={`min-h-screen bg-background text-foreground ${theme}`}>
+        <Header />
+        <main className="container mx-auto pt-20 sm:pt-24 px-4 sm:px-6 lg:px-8">
+          {children}
+        </main>
+        <FloatingChatIcon />
+      </div>
+    </TodoProvider>
   );
 }
