@@ -1,4 +1,5 @@
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import JSON
 from typing import Optional, List
 from datetime import datetime
 import uuid
@@ -12,7 +13,7 @@ class MessageBase(SQLModel):
     user_id: str = Field(foreign_key="users.id", nullable=False)
     role: str = Field(max_length=50, nullable=False)  # 'user', 'assistant', 'system'
     content: str = Field(nullable=False)  # Message content
-    metadata: Optional[dict] = Field(default=None)  # JSON field for additional settings
+    message_metadata: Optional[dict] = Field(default=None, sa_type=JSON)  # JSON field for additional settings
 
 
 class Message(MessageBase, table=True):
@@ -26,7 +27,7 @@ class Message(MessageBase, table=True):
     - role: Role of the message sender ('user', 'assistant', 'system')
     - content: Message content
     - timestamp: When the message was sent
-    - metadata: Additional message metadata
+    - message_metadata: Additional message metadata
     """
     __tablename__ = "messages"
 
@@ -36,7 +37,6 @@ class Message(MessageBase, table=True):
     role: str = Field(max_length=50, nullable=False)
     content: str = Field(nullable=False)
     timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)  # Add index for chronological queries
-    metadata: Optional[dict] = Field(default=None)  # JSON field
 
     # Relationships
     conversation: "Conversation" = Relationship(back_populates="messages")
@@ -58,7 +58,7 @@ class MessageUpdate(SQLModel):
     Model for updating message information
     """
     content: Optional[str] = None
-    metadata: Optional[dict] = None
+    message_metadata: Optional[dict] = None
 
 
 class MessagePublic(MessageBase):

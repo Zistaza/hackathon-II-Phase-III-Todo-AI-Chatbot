@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 from uuid import uuid4
 from datetime import datetime
@@ -15,6 +16,12 @@ from ..services.conversation_service import ConversationService
 from ..middleware.chat_auth import chat_auth_middleware
 from ..exceptions.auth import InsufficientPermissionsException
 
+# Import agent modules
+from ..agents.todo_chatbot.agent import Agent, AgentConfig
+
+# Import security scheme to access raw token
+security = HTTPBearer()
+
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
@@ -22,6 +29,7 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 async def send_chat_message(
     user_id: str,
     message: ChatMessage,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
     current_user: CurrentUser = Depends(get_current_user),
     session: Session = Depends(get_session)
 ):
@@ -59,7 +67,8 @@ async def send_chat_message(
     user_conversations = conversation_service.get_user_conversations(user_id=current_user.user_id, limit=1)
     if user_conversations:
         conversation = user_conversations[0]  # Use the most recent conversation
-        conversation_id = conversation.id
+        # Access the ID immediately to avoid detached instance error
+        conversation_id = str(conversation.id)
     else:
         # Create a new conversation if none exists
         conversation_data = ConversationCreate(title=f"Chat with {current_user.email}")
@@ -67,7 +76,8 @@ async def send_chat_message(
             user_id=current_user.user_id,
             conversation_data=conversation_data
         )
-        conversation_id = conversation.id
+        # Access the ID immediately after creation to avoid detached instance error
+        conversation_id = str(conversation.id)
 
     # Add user message to conversation
     user_message_data = MessageCreate(
@@ -84,7 +94,13 @@ async def send_chat_message(
     )
 
     # Process the message with AI using conversation context
-    response_content = await process_chat_message_with_ai(message, current_user, conversation_service, conversation_id)
+    try:
+        response_content = await process_chat_message_with_ai(message, current_user, conversation_service, conversation_id)
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error processing chat message: {str(e)}")
+        # Return a helpful error response to the user
+        response_content = "I'm sorry, I encountered an error processing your message. Please try again."
 
     # Add AI response to conversation
     ai_message_data = MessageCreate(
@@ -241,30 +257,25 @@ async def process_chat_message_with_ai(message: ChatMessage, user: CurrentUser, 
     Returns:
         str: The AI-generated response
     """
-    # Retrieve conversation history to provide context to the AI
-    # Get recent messages for context (last 10 messages as an example)
-    try:
-        recent_messages = conversation_service.get_conversation_messages(
-            conversation_id=conversation_id,
-            user_id=user.user_id,
-            limit=10,
-            offset=0
-        )
+    # Initialize the agent
+    config = AgentConfig()
+    agent = Agent(config=config)
 
-        # Prepare context from recent messages
-        context_summary = ""
-        if recent_messages:
-            context_summary = f"\n\nContext from recent conversation: {[msg.content[:50] + '...' for msg in recent_messages[-5:]]}"  # Last 5 messages
-    except Exception:
-        # If there's an issue getting context, continue without it
-        context_summary = ""
+    # Process the message with the agent
+    result = await agent.process_message(
+        user_id=user.user_id,
+        conversation_id=conversation_id,
+        message=message.content
+    )
 
-    # Simulate AI processing delay
-    await asyncio.sleep(0.1)
+    # Extract the response from the agent result
+    response_content = result.get("response", f"I processed your message: '{message.content}'.")
 
-    # In a real implementation, this would call an AI service like OpenAI
-    # with the conversation history as context
-    # For now, return a response that acknowledges the conversation context
-    response_content = f"I received your message: '{message.content}'. Based on our conversation context, this is an AI response for user {user.email}.{context_summary}"
+    # If there are tool calls that resulted in errors, include error information
+    tool_calls = result.get("tool_calls", [])
+    for tool_call in tool_calls:
+        if tool_call.get("status") == "error":
+            error_msg = tool_call.get("result", {}).get("error", "An error occurred processing your request.")
+            response_content += f" Note: {error_msg}"
 
     return response_content

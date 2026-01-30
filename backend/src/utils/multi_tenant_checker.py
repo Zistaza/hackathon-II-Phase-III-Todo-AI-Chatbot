@@ -2,8 +2,8 @@
 Utility for checking multi-tenant access and user permissions.
 """
 from typing import Optional
-from src.models.user_model import User
-from src.database import get_session
+from ..models.user_model import User
+from ..database import engine
 from sqlmodel import select
 
 
@@ -23,15 +23,20 @@ class MultiTenantChecker:
             return False
 
         try:
-            # Get database session
-            async with get_session() as session:
-                # Query for user by ID
-                statement = select(User).where(User.id == user_id)
-                result = await session.execute(statement)
-                user = result.first()
+            # Execute query using engine directly
+            def _verify_user_sync():
+                with Session(engine) as session:
+                    # Query for user by ID
+                    statement = select(User).where(User.id == user_id)
+                    result = session.execute(statement)
+                    user = result.first()
 
-                # Return True if user exists
-                return user is not None
+                    # Return True if user exists
+                    return user is not None
+
+            import asyncio
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, _verify_user_sync)
         except Exception:
             # If there's an error querying the database, return False
             return False

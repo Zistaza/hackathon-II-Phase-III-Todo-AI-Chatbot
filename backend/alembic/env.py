@@ -11,8 +11,14 @@ from sqlalchemy import pool
 from alembic import context
 
 # Import our application models and database configuration
-from src.models import *
-from src.database import Base, DATABASE_URL
+from src.database import DATABASE_URL
+from src.models.user_model import User
+from src.models.task_model import Task
+from src.models.conversation_model import Conversation
+from src.models.message_model import Message
+from src.models.tool_call import ToolCall
+from src.models.mcp_tool import MCPToolMetadata
+from sqlmodel import SQLModel
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,7 +30,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Add our model's MetaData object for 'autogenerate' support
-target_metadata = Base.metadata
+target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

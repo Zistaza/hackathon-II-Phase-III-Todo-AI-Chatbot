@@ -9,15 +9,14 @@ import logging
 from .intent_classifier import IntentClassifier, IntentType
 from .tool_selector import ToolSelector
 from .ambiguity_detector import AmbiguityDetector
-from ..services.mcp_integration import MCPIntegration
-from ..services.chat_service import ChatService
+from src.services.mcp_integration import MCPIntegration
 
 
 class AgentConfig:
     """Configuration for the agent"""
 
     def __init__(self):
-        self.intent_confidence_threshold = 0.8  # Minimum confidence for direct action
+        self.intent_confidence_threshold = 0.6  # Minimum confidence for direct action (lowered for natural language)
         self.max_ambiguity_attempts = 3  # Max attempts to resolve ambiguous requests
         self.confirmation_required = True  # Whether destructive operations need explicit confirmation
         self.context_window_size = 10  # Number of previous messages to consider
@@ -36,7 +35,6 @@ class Agent:
         self.tool_selector = ToolSelector()
         self.ambiguity_detector = AmbiguityDetector()
         self.mcp_integration = MCPIntegration()
-        self.chat_service = ChatService()
 
         # Setup logging
         self.logger = logging.getLogger(__name__)
@@ -91,15 +89,24 @@ class Agent:
                 user_id, conversation_id, message, intent, extracted_params, ambiguity_check
             )
 
+        # If the intent is task completion, deletion, or update but we only have a reference (not an ID),
+        # we should list tasks first to find the correct one
+        if intent in [IntentType.TASK_COMPLETION, IntentType.TASK_DELETION, IntentType.TASK_UPDATE] and \
+           "task_reference" in extracted_params and "task_id" not in extracted_params:
+            # Need to resolve the task reference by listing tasks first
+            return await self._resolve_task_reference(
+                user_id, conversation_id, message, intent, extracted_params
+            )
+
         # If confidence is high enough, proceed with tool selection
         if confidence >= self.config.intent_confidence_threshold:
             # Select appropriate tool based on intent
             tool_call = self.tool_selector.select_tool(intent, extracted_params)
 
             if tool_call:
-                # Execute the tool call
+                # Execute the tool call with the user_id
                 tool_result = await self.mcp_integration.execute_tool_call(
-                    tool_call["name"], tool_call["arguments"]
+                    user_id, tool_call["name"], tool_call["arguments"]
                 )
 
                 # Add to response
@@ -137,6 +144,7 @@ class Agent:
             intent: The classified intent
             extracted_params: Parameters extracted from the message
             ambiguity_check: Results from the ambiguity detector
+            token: JWT token for authentication
 
         Returns:
             Dictionary containing the agent's response and any tool calls made
@@ -151,7 +159,7 @@ class Agent:
 
         # For ambiguous requests, first list relevant tasks to provide context (discovery-first pattern)
         list_args = {"status_filter": "all"}
-        list_result = await self.mcp_integration.execute_tool_call("list_tasks", list_args)
+        list_result = await self.mcp_integration.execute_tool_call(user_id, "list_tasks", list_args)
 
         response_data["tool_calls"].append({
             "id": f"call_{len(response_data['tool_calls'])}",
@@ -213,7 +221,16 @@ class Agent:
             elif len(tasks) == 1:
                 return f"You have 1 task: '{tasks[0].get('title', 'unnamed')}'"
             else:
-                return f"You have {len(tasks)} tasks. The first few are: {', '.join([task.get('title', 'unnamed') for task in tasks[:3]])}"
+                # For "all" requests, show all task titles; for other requests, limit to first 3
+                status_filter = tool_args.get("status_filter", "all")
+                if status_filter == "all":
+                    # Show all tasks when user asks for "all my tasks"
+                    task_titles = [task.get('title', 'unnamed') for task in tasks]
+                    return f"You have {len(tasks)} tasks: {', '.join(task_titles)}"
+                else:
+                    # For filtered requests (pending/completed), show first few
+                    task_titles = [task.get('title', 'unnamed') for task in tasks[:3]]
+                    return f"You have {len(tasks)} tasks. The first few are: {', '.join(task_titles)}"
 
         elif intent == IntentType.TASK_COMPLETION:
             return f"I've marked the task as completed."
@@ -228,6 +245,117 @@ class Agent:
             return f"I've updated the task: '{tool_result.get('title', 'unnamed')}'"
 
         return "Operation completed successfully."
+
+    async def _resolve_task_reference(self, user_id: str, conversation_id: str, message: str,
+                                   intent: IntentType, extracted_params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Resolve task references by listing tasks first, then performing the intended action
+
+        Args:
+            user_id: ID of the requesting user
+            conversation_id: ID of the conversation
+            message: The original user message
+            intent: The classified intent
+            extracted_params: Parameters extracted from the message
+
+        Returns:
+            Dictionary containing the agent's response and any tool calls made
+        """
+        response_data = {
+            "conversation_id": conversation_id,
+            "response": "",
+            "tool_calls": [],
+            "next_action": "completed",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+        # First, list tasks to find the matching one
+        list_args = {"status_filter": "all"}
+        list_result = await self.mcp_integration.execute_tool_call(user_id, "list_tasks", list_args)
+
+        response_data["tool_calls"].append({
+            "id": f"call_{len(response_data['tool_calls'])}",
+            "name": "list_tasks",
+            "arguments": list_args,
+            "status": "success" if "error" not in list_result else "error",
+            "result": list_result
+        })
+
+        if "error" in list_result:
+            response_data["response"] = f"I couldn't list your tasks: {list_result['error']}"
+            return response_data
+
+        # Find the task that matches the reference
+        task_reference = extracted_params.get("task_reference", "").lower()
+        matching_task = None
+
+        for task in list_result.get("tasks", []):
+            if task is None or not hasattr(task, 'get'):
+                continue  # Skip None tasks or tasks that don't have get method (not dict-like)
+
+            task_title = (task.get("title") or "").lower()
+            task_desc = (task.get("description") or "").lower()
+
+            if task_reference in task_title or task_reference in task_desc:
+                matching_task = task
+                break
+
+        if not matching_task:
+            response_data["response"] = f"I couldn't find a task matching '{extracted_params.get('task_reference')}'. Here are your tasks: {[t.get('title', 'Unnamed') for t in list_result.get('tasks', [])][:5]}"
+            return response_data
+
+        # Now perform the intended action on the found task
+        if intent == IntentType.TASK_COMPLETION:
+            tool_call = {
+                "name": "complete_task",
+                "arguments": {
+                    "task_id": matching_task["id"],
+                    "title": matching_task.get("title", "")
+                }
+            }
+        elif intent == IntentType.TASK_DELETION:
+            tool_call = {
+                "name": "delete_task",
+                "arguments": {
+                    "task_id": matching_task["id"],
+                    "title": matching_task.get("title", "")
+                }
+            }
+        elif intent == IntentType.TASK_UPDATE:
+            # Use the original extracted params but with the found task_id
+            update_args = extracted_params.copy()
+            update_args["task_id"] = matching_task["id"]
+            del update_args["task_reference"]  # Remove reference since we now have the ID
+
+            tool_call = {
+                "name": "update_task",
+                "arguments": update_args
+            }
+        else:
+            # Fallback
+            response_data["response"] = f"I found the task '{matching_task.get('title', 'unnamed')}', but I'm not sure what to do with it."
+            return response_data
+
+        # Execute the tool call
+        tool_result = await self.mcp_integration.execute_tool_call(
+            user_id, tool_call["name"], tool_call["arguments"]
+        )
+
+        # Add to response
+        response_data["tool_calls"].append({
+            "id": f"call_{len(response_data['tool_calls'])}",
+            "name": tool_call["name"],
+            "arguments": tool_call["arguments"],
+            "status": "success" if "error" not in tool_result else "error",
+            "result": tool_result
+        })
+
+        # Generate natural language response based on tool result
+        response_data["response"] = self._generate_response_for_tool_result(
+            intent, tool_result, tool_call["arguments"]
+        )
+
+        return response_data
 
     def _intent_to_natural_language(self, intent: IntentType) -> str:
         """

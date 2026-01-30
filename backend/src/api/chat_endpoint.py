@@ -7,11 +7,11 @@ from pydantic import BaseModel
 from sqlmodel import Session
 from starlette.background import BackgroundTasks
 
-from src.dependencies.auth import get_current_user
-from src.models.user import CurrentUser
-from src.database import get_session
-from src.services.stateless_chat_service import StatelessChatService
-from src.models.conversation_model import ConversationCreate
+from ..dependencies.auth import get_current_user
+from ..models.user import CurrentUser
+from ..database import get_session
+from ..services.stateless_chat_service import StatelessChatService
+from ..models.conversation_model import ConversationCreate
 
 
 router = APIRouter()

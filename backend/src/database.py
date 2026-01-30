@@ -2,8 +2,11 @@ from sqlmodel import create_engine, Session
 from .config.settings import settings
 from typing import Generator
 
+# Export the database URL
+DATABASE_URL = settings.DATABASE_URL
+
 # Create the database engine
-engine = create_engine(settings.DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=True)
 
 
 def get_session() -> Generator[Session, None, None]:

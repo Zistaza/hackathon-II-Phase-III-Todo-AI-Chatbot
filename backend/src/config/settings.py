@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://localhost/todo_app_dev")
 
+    # OpenAI
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+
     # JWT Configuration
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_DELTA: int = 86400  # 24 hours in seconds
