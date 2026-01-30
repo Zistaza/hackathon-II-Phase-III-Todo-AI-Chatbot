@@ -39,7 +39,7 @@ export default function CreateTaskPage() {
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
         <Link href="/tasks">
-          <Button>← Back to Tasks</Button>
+          <Button className="rounded-lg hover-lift">← Back to Tasks</Button>
         </Link>
       </div>
 

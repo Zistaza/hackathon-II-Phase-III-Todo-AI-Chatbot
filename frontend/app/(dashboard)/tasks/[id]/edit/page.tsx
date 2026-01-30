@@ -65,7 +65,7 @@ export default function EditTaskPage() {
           <Button
             variant="secondary"
             size="sm"
-            className="mt-2"
+            className="mt-2 rounded-lg hover-lift"
             onClick={() => router.back()}
           >
             Go Back

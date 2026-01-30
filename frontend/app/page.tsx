@@ -13,76 +13,101 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden">
       {/* Animated background elements */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute -top-1/2 left-1/4 w-[1000px] h-[1000px] rounded-full bg-primary/5 blur-3xl animate-pulse"></div>
-        <div className="absolute top-1/3 right-1/4 w-[800px] h-[800px] rounded-full bg-secondary/5 blur-3xl animate-pulse delay-1000"></div>
+      <div className="fixed inset-0 -z-20 overflow-hidden">
+        <div className="absolute -top-1/3 left-1/4 w-[1200px] h-[1200px] rounded-full bg-gradient-to-r from-primary/10 to-secondary/10 blur-3xl animate-pulse"></div>
+        <div className="absolute top-1/4 right-1/4 w-[1000px] h-[1000px] rounded-full bg-gradient-to-r from-secondary/10 to-accent/10 blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-1/4 left-1/2 w-[800px] h-[800px] rounded-full bg-gradient-to-r from-accent/10 to-primary/10 blur-3xl animate-pulse delay-2000"></div>
       </div>
 
       {/* Header with theme toggle */}
-      <header className="absolute top-6 right-6 z-10">
+      <header className="absolute top-6 right-6 z-20">
         <ThemeToggle />
       </header>
 
       {/* Main content */}
-      <main className="container mx-auto px-6 py-12">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          className="min-h-screen flex flex-col items-center justify-center pt-20 pb-12"
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          {/* Hero Section */}
+          <motion.section
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="w-full max-w-5xl"
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="w-full max-w-6xl text-center mb-20 sm:mb-28 lg:mb-32"
           >
             <HeroSection />
-          </motion.div>
+          </motion.section>
 
-          <motion.div
+          {/* Features Section */}
+          <motion.section
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
+            className="w-full max-w-7xl mb-20 sm:mb-28 lg:mb-32"
+          >
+            <FeaturesSection />
+          </motion.section>
+
+          {/* Auth Section */}
+          <motion.section
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="w-full max-w-6xl my-20"
-          >
-            <FeaturesSection />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="w-full max-w-lg mt-8"
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            className="w-full max-w-2xl"
           >
             <AuthSection />
-          </motion.div>
-        </motion.div>
+          </motion.section>
+        </div>
       </main>
 
       {/* Floating particles for extra animation */}
-      {[...Array(8)].map((_, i) => (
+      {[...Array(12)].map((_, i) => (
         <motion.div
-          key={i}
-          className="fixed rounded-full bg-primary/10"
+          key={`particle-${i}`}
+          className="fixed rounded-full bg-gradient-to-r from-primary/20 to-secondary/20"
           style={{
-            width: 10 + (i * 4),
-            height: 10 + (i * 4),
-            top: `${15 + (i * 12)}%`,
-            left: `${10 + (i * 15)}%`,
+            width: 8 + (i % 6) * 4,
+            height: 8 + (i % 6) * 4,
+            top: `${10 + (i * 8)}%`,
+            left: `${5 + (i * 12)}%`,
           }}
           animate={{
-            y: [0, -30, 0],
-            x: [0, 15, 0],
-            opacity: [0.2, 0.4, 0.2],
+            y: [0, -40, 0],
+            x: [0, 20, 0],
+            opacity: [0.1, 0.3, 0.1],
+            scale: [1, 1.2, 1],
           }}
           transition={{
-            duration: 3 + (i * 0.5),
+            duration: 4 + (i % 3) * 2,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: i * 0.4,
+            delay: i * 0.3,
+          }}
+        />
+      ))}
+
+      {/* Subtle floating shapes */}
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={`shape-${i}`}
+          className="fixed rounded-full border border-primary/20 bg-primary/5"
+          style={{
+            width: 100 + i * 40,
+            height: 100 + i * 40,
+            top: `${20 + i * 15}%`,
+            left: `${80 - i * 10}%`,
+          }}
+          animate={{
+            y: [-20, 20, -20],
+            x: [-10, 10, -10],
+            rotate: [0, 180, 360],
+          }}
+          transition={{
+            duration: 8 + i * 2,
+            repeat: Infinity,
+            ease: "linear",
+            delay: i * 0.5,
           }}
         />
       ))}

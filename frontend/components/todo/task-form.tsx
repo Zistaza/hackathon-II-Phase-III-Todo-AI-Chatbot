@@ -69,10 +69,10 @@ export const TaskForm: React.FC<TaskFormProps> = ({
         rows={3}
       />
 
-      <div className="flex space-x-2">
-        <Button type="submit">{submitButtonText}</Button>
+      <div className="flex flex-col sm:flex-row sm:space-x-3 space-y-2 sm:space-y-0">
+        <Button type="submit" className="rounded-lg hover-lift">{submitButtonText}</Button>
         {onCancel && (
-          <Button type="button" variant="secondary" onClick={onCancel}>
+          <Button type="button" variant="secondary" onClick={onCancel} className="rounded-lg hover-lift">
             Cancel
           </Button>
         )}
